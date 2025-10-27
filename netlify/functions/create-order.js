@@ -2,7 +2,10 @@
 // Route: /.netlify/functions/create-order
 
 exports.handler = async function (event, context) {
-  console.log('Function invoked:', event.httpMethod, event.path);
+  console.log('=== Function invoked ===');
+  console.log('Method:', event.httpMethod);
+  console.log('Path:', event.path);
+  console.log('Headers:', JSON.stringify(event.headers, null, 2));
   
   // Set headers for all responses
   const headers = { 
@@ -12,16 +15,37 @@ exports.handler = async function (event, context) {
     'access-control-allow-methods': 'POST, OPTIONS'
   };
 
-  // Handle OPTIONS for CORS
+  // Handle OPTIONS for CORS preflight
   if (event.httpMethod === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
     return { statusCode: 200, headers, body: '' };
   }
 
+  // Handle GET for debugging
+  if (event.httpMethod === 'GET') {
+    console.log('GET request received (informational only)');
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ 
+        message: 'Razorpay Order Creation Endpoint',
+        method: 'POST',
+        expectedBody: { amount: 'number', currency: 'string', receipt: 'string' },
+        status: 'Function is running'
+      }),
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
+    console.log('Invalid method:', event.httpMethod);
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' }),
+      body: JSON.stringify({ 
+        error: 'Method not allowed',
+        received: event.httpMethod,
+        expected: 'POST'
+      }),
     };
   }
 
